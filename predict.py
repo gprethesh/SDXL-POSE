@@ -2,16 +2,15 @@ from cog import BasePredictor, Input, Path
 import torch
 from diffusers import StableDiffusionXLControlNetPipeline, ControlNetModel
 from diffusers.utils import load_image
-import numpy as np
+
 
 class Predictor(BasePredictor):
     def setup(self):
-        """Load the model into memory"""
+        """Load the model directly from HuggingFace"""
         self.controlnet = ControlNetModel.from_pretrained(
-            "xinsir/controlnet-union-sdxl-1.0",
-            torch_dtype=torch.float16
+            "xinsir/controlnet-union-sdxl-1.0", torch_dtype=torch.float16
         )
-        
+
         self.pipe = StableDiffusionXLControlNetPipeline.from_pretrained(
             "stabilityai/stable-diffusion-xl-base-1.0",
             controlnet=self.controlnet,
@@ -29,9 +28,9 @@ class Predictor(BasePredictor):
     ) -> Path:
         if seed != -1:
             torch.manual_seed(seed)
-        
+
         control_image = load_image(str(image))
-        
+
         output = self.pipe(
             prompt=prompt,
             image=control_image,
@@ -39,7 +38,7 @@ class Predictor(BasePredictor):
             num_inference_steps=num_inference_steps,
             guidance_scale=guidance_scale,
         ).images[0]
-        
+
         output_path = "/tmp/output.png"
         output.save(output_path)
         return Path(output_path)
